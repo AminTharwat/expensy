@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <title>Spend Spot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+
+
+        class UI {
+            constructor() {
+                this.budgetFeedback = document.querySelector(".budget-feedback");
+                this.expenseFeedback = document.querySelector(".expense-feedback");
+                this.budgetForm = document.getElementById("budget-form");
+                this.budgetInput = document.getElementById("budget-input");
+                this.budgetAmount = document.getElementById("budget-amount");
+                this.expenseAmount = document.getElementById("expense-amount");
+                this.balance = document.getElementById("balance");
+                this.balanceAmount = document.getElementById("balance-amount");
+                this.expenseForm = document.getElementById("expense-form");
+                this.expenseInput = document.getElementById("expense-input");
+                this.amountInput = document.getElementById("amount-input");
+                this.expenseList = document.getElementById("expense-list");
+                this.itemList = [];
+                this.itemID = 0;
+            }
+            submitBudgetForm() {
+                const value = this.budgetInput.value;
+                if (value === '' || value < 0) {
+                    this.budgetFeedback.classList.add('showItem');
+                    this.budgetFeedback.innerHTML = '<p>value cannot be empty or navigate</p>';
+                    const self = this;
+                    setTimeout(function () {
+                        (accumulator, current)
+                        accumulator += current.amount;
+                        self.budgetFeedback.classList.add('showItem');
+                    }, 4000);
+                } else {
+                    this.budgetAmount.textContent = value;
+                    this.budgetInput.value = '';
+                    this.showBalance();
+                }
+            }
+            showBalance() {
+                const expense = this.totalExpense();
+                const total = parseInt(this.budgetAmount.textContent) - expense;
+                this.balanceAmount.textContent = total;
+                if (total < 0) {
+                    this.balance.classList.remove('showGreen', 'showBlack');
+                    this.balance.classList.add('showRed');
+                } else if (total > 0) {
+                    this.balance.classList.remove('showRed', 'showBlack');
+                    this.balance.classList.add('showGreen');
+                } else if (total === 0) {
+                    this.balance.classList.remove('showRed', 'showGreen');
+                    this.balance.classList.add('showBlack');
+                }
+
+                
+            }
+            totalbalance() {
+                let total1 = 0;
+                if (this.itemList.length > 0) {
+                    total1 = this.itemList.reduce(function (accumulator, current) {
+                        accumulator += current.amount;
+                        return accumulator;
+                    }, 0);
+                }
+                this.expenseAmount.textContent = total1;
+                return total1;
+            }
+           
+            submitExpenseForm() {
+                const expenseValue = this.expenseInput.value;
+                const amountValue = this.amountInput.value;
+                if (expenseValue === '' || amountValue === '' || amountValue < 0) {
+                    this.expenseFeedback.classList.add('showItem');
+                    this.expenseFeedback.innerHTML = '<p>value cannot be empty or navigate</p>';
+                    const self = this;
+                    setTimeout(function () {
+                        self.expenseFeedback.classList.remove('showItem');
+                    }, );
+                } else {
+                    let amount = parseInt(amountValue);
+                    this.expenseInput.value = '';
+                    this.amountInput.value = '';
+                    let expense = {
+                        id: this.itemID,
+                        title: expenseValue,
+                        amount: amount,
+                    }
+                    this.itemID++;
+                    this.itemList.push(expense);
+                    this.addExpense(expense);
+                    this.showBalance();
+                }
+            }
+            addExpense(expense) {
+                const div = document.createElement('div');
+                div.classList.add('expense');
+                div.innerHTML = `
+               <div class="expense-item flex justify-between gap-7 align-items-baseline">
+                    <h6 class="expense-title mb-0 text-2xl text-uppercase list-item " style="list-style:none;">- ${expense.title}</h6>
+                    <h5 class="expense-amount mb-0 text-2xl list-item" style="list-style:none;">${expense.amount}</h5>
+                    <div class="expense-icons list-item " style="list-style:none;">
+                         <a href="#" class="edit-icon mx-2" data-id="${expense.id}"><i class="fas fa-edit"></i></a>
+                         <a href="#" class="delete-icon" data-id="${expense.id}"><i class="fas fa-trash"></i></a>
+                    </div>
+               </div>
+          `;
+                this.expenseList.appendChild(div);
+            }
+            totalExpense() {
+                let total = 0;
+                if (this.itemList.length > 0) {
+                    total = this.itemList.reduce(function (accumulator, current) {
+                        accumulator += current.amount;
+                        return accumulator;
+                    }, 0);
+                }
+                this.expenseAmount.textContent = total;
+                return total;
+            }
+            editExpense(element) {
+                let id = parseInt(element.dataset.id);
+                let parent = element.parentElement.parentElement.parentElement;
+                this.expenseList.removeChild(parent);
+                let expense = this.itemList.filter(function (item) {
+                    return item.id === id;
+                });
+                this.expenseInput.value = expense[0].title;
+                this.amountInput.value = expense[0].amount;
+                let temporaryList = this.itemList.filter(function (item) {
+                    return item.id !== id;
+                });
+                this.itemList = temporaryList;
+                this.showBalance();
+            }
+            deleteExpense(element) {
+                let id = parseInt(element.dataset.id);
+                let parent = element.parentElement.parentElement.parentElement;
+                this.expenseList.removeChild(parent);
+                let temporaryList = this.itemList.filter(function (item) {
+                    return item.id !== id;
+                });
+                this.itemList = temporaryList;
+                this.showBalance();
+            }
+        }
+        function eventListeners() {
+            const budgetForm = document.getElementById('budget-form');
+            const expenseForm = document.getElementById('expense-form');
+            const expenseList = document.getElementById('expense-list');
+            const ui = new UI();
+            budgetForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                ui.submitBudgetForm();
+            });
+            expenseForm.addEventListener('submit', function (event) {
+                event.preventDefault();
+                ui.submitExpenseForm();
+            });
+            expenseList.addEventListener('click', function (event) {
+                if (event.target.parentElement.classList.contains('edit-icon')) {
+                    ui.editExpense(event.target.parentElement);
+                } else if (event.target.parentElement.classList.contains('delete-icon')) {
+                    ui.deleteExpense(event.target.parentElement);
+                }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', () => eventListeners());
+
+    </script>
+
+    <style>
+        :root {
+            --mainWhite: #f5f5f5f5;
+            --mainDark: #333333;
+            --mainGreen: #317b22;
+            --mainRed: #b80c09;
+            --mainBlue: #05668d;
+        }
+
+
+
+        .budget-feedback,
+        .expense-feedback {
+            display: none;
+        }
+
+        .budget-form {
+            border: 0.15rem solid var(--mainGreen);
+            border-radius: 0.25rem;
+            padding: 1rem;
+        }
+
+        .expense-form {
+            border: 0.15rem solid var(--mainRed);
+            border-radius: 0.25rem;
+            padding: 1rem;
+        }
+
+        .budget-submit {
+            background-color: transparent;
+            color: var(--mainGreen);
+            border: 0.1rem solid var(--mainGreen);
+        }
+
+        .expense-submit {
+            background-color: transparent;
+            color: var(--mainRed);
+            border: 0.1rem solid var(--mainRed);
+        }
+
+        .budget-submit:hover {
+            background-color: var(--mainGreen);
+            color: white;
+        }
+
+        .expense-submit:hover {
+            background-color: var(--mainRed);
+            color: var(--mainWhite);
+        }
+
+        .budget-input {
+            border: 0.05rem solid var(--mainGreen) !important;
+        }
+
+        .expense-input {
+            border: 0.05rem solid var(--mainRed) !important;
+        }
+
+        .expense-amount,
+        .expense-title {
+            color: var(--mainRed);
+        }
+
+        .edit-icon {
+            color: var(--mainBlue);
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: none !important;
+        }
+
+        .delete-icon {
+            color: var(--mainRed);
+            cursor: pointer;
+            font-size: 1rem;
+            text-decoration: none !important;
+        }
+
+        .edit-icon:hover {
+            color: var(--mainBlue);
+        }
+
+        .delete-icon:hover {
+            color: var(--mainRed);
+        }
+
+        .showItem {
+            display: block;
+        }
+
+        .info-title {
+            font-size: 1.5rem;
+        }
+
+        .budget {
+            font-size: 1.6rem;
+            color: var(--mainGreen);
+        }
+
+        .expense {
+            font-size: 1.6rem;
+            color: var(--mainRed);
+        }
+
+        .balance {
+            font-size: 1.6rem;
+        }
+
+        .budget-icon,
+        .expense-icon,
+        .balance-icon {
+            font-size: 2.5rem;
+            color: var(--mainBlue);
+        }
+
+        .showRed {
+            color: var(--mainRed);
+        }
+
+        .showGreen {
+            color: var(--mainGreen);
+        }
+
+        .showBlack {
+            color: var(--mainDark);
+        }
+
+        .list-item {
+            flex: 0% 0% 33.33%;
+            text-align: center;
+        }
+
+        .expense-item {
+            height: 2rem;
+        }
+
+        @media only screen and (min-width:992px) {
+            .budget {
+                font-size: 2.6rem;
+                color: var(--mainGreen);
+            }
+
+            .expense {
+                font-size: 2.6rem;
+                color: var(--mainRed);
+            }
+
+            .balance {
+                font-size: 2.6rem;
+            }
+
+            .budget-icon,
+            .expense-icon,
+            .balance-icon {
+                font-size: 3.5rem;
+                color: var(--mainBlue);
+            }
+        }
+
+        .dropbtn {
+            background-color: rgb(43, 133, 236);
+            color: rgb(255, 255, 255);
+            padding: 8px;
+            font-size: 16px;
+            border: none;
+        }
+
+        /* The container <div> - needed to position the dropdown content */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown Content (Hidden by Default) */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #f8f8f8f1;
+            min-width: 125px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        /* Links inside the dropdown */
+        .dropdown-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Change color of dropdown links on hover */
+        .dropdown-content a:hover {
+            background-color: #ddd;
+        }
+
+        /* Show the dropdown menu on hover */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Change the background color of the dropdown button when the dropdown content is shown */
+        .dropdown:hover .dropbtn {}
+
+        .dropbtn:hover {
+            transition: 10px;
+        }
+
+        .dropbtn1 {
+            color: rgb(255, 255, 255);
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+        }
+
+        /* The container <div> - needed to position the dropdown content */
+        .dropdown1 {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown Content (Hidden by Default) */
+        .dropdown1-content {
+            display: none;
+            position: absolute;
+            background-color: #f1f1f1;
+            min-width: 140px;
+            box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        /* Links inside the dropdown */
+        .dropdown1-content a {
+            color: black;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Change color of dropdown links on hover */
+        .dropdown1-content a:hover {
+            background-color: #b2d15b;
+        }
+
+        /* Show the dropdown menu on hover */
+        .dropdown1:hover .dropdown1-content {
+            display: block;
+        }
+
+        /* Change the background color of the dropdown button when the dropdown content is shown */
+        /* .dropdown1:hover .dropbtn1 {
+} */
+        .dropbtn1:hover {
+            transition: 10px;
+        }
+
+        .social-stats .row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 25px;
+        }
+
+        .social-stat-item {
+            background-color: rgb(245, 239, 239);
+            padding: 20px;
+            border-radius: 5px;
+            border-top-width: 3px;
+            border-top-style: solid;
+            width: 100%;
+        }
+
+        .social-stat-item.dark-theme {
+            background-color: rgb(34, 42, 70);
+        }
+
+        .social-stat-item:nth-child(1) {
+            border-top-color: rgb(1, 56, 206);
+        }
+
+        .social-stat-item:nth-child(2) {
+            border-top-color: #1da1f2;
+        }
+
+        .social-stat-item:nth-child(3) {
+            border-top-color: #b96574;
+        }
+
+        .social-stat-item:nth-child(4) {
+            border-top-color: #c4032b;
+        }
+    </style>
+
+
+</head>
+
+<body>
+    <div class="min-h-full">
+
+
+        <nav class="bg-gray-800">
+
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+                <div class="flex h-16 items-center justify-between">
+                    <div class="flex items-center">
+
+                        <div class="mr-7 " style="margin-left: -50px;"> <a href="../index.html"
+                                class=" w-14	 text-white text-5xl"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12L12 14.25m-2.58 4.92l-6.375-6.375a1.125 1.125 0 010-1.59L9.42 4.83c.211-.211.498-.33.796-.33H19.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-9.284c-.298 0-.585-.119-.796-.33z" />
+                                </svg>
+                            </a> </div>
+                        <div class="gap-2 flex items-center">
+                            <img class=" rounded-full h-10 w-10" src="../assets/logo1.png" alt="Spend Spot">
+                            <h1 class="text-green-200 drop-shadow-xl	hover:text-white  text-2xl">Spend Spot</h1>
+                        </div>
+                        <div class="hidden md:block">
+                            <div class="ml-20 flex items-baseline space-x-4">
+                                <a href="../index.html"
+                                    class="text-gray-300 active:bg-blue-600 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-xl font-medium">Dashboard</a>
+
+
+
+                                <a href="expense.html"
+                                    class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-xl font-medium">Expenses</a>
+
+
+
+                                <a href="report.html"
+                                    class="text-gray-300 hover:bg-gray-700 hover:text-white rounded-md px-3 py-2 text-xl font-medium">Reports</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-4 gap-9 flex items-center md:ml-6">
+                            <button type="button"
+                                class="  bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none  ">
+                                <span class="sr-only">View notifications</span></button>
+                            <div class="dropdown">
+                                <button class="dropbtn rounded-full"> <svg xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                        class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M12 4.5v15m7.5-7.5h-15" />
+                                    </svg>
+
+                                </button>
+                                <div class="dropdown-content">
+                                    <a href="#">Add expense </a>
+                                    <a href="#">Add income</a>
+
+                                </div>
+                            </div>
+
+
+
+
+                            <!-- Profile dropdown -->
+                            <div class="relative ml-3">
+                                <div class="dropdown1">
+                                    <button class="dropbtn1 rounded-full"> <img class="h-9 w-9 rounded-full"
+                                            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                            alt="">
+                                    </button>
+                                    <div class="dropdown1-content">
+
+                                        <a href="#" style="display: flex;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                            </svg>
+                                            profile </a>
+                                        <a href="#" style="display: flex;"><svg xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                class="w-6 h-6" style="display: flex;">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            setting</a>
+
+                                    </div>
+                                </div>
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="-mr-2 flex md:hidden">
+                        <!-- Mobile menu button -->
+                        <button type="button"
+                            class="inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                            aria-controls="mobile-menu" aria-expanded="false">
+                            <span class="sr-only">Open main menu</span>
+                            <!-- Menu open: "hidden", Menu closed: "block" -->
+                            <svg class="block h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                            <!-- Menu open: "block", Menu closed: "hidden" -->
+                            <svg class="hidden h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile menu, show/hide based on menu state. -->
+            <div class="md:hidden" id="mobile-menu">
+                <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
+                    <!-- Current: "bg-gray-900 text-white", Default: "text-gray-300 hover:bg-gray-700 hover:text-white" -->
+                    <a href="#" class="bg-gray-900 text-white block rounded-md px-3 py-2 text-base font-medium"
+                        aria-current="page">Dashboard</a>
+
+                    <a href="#"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Billls
+                        & payment</a>
+
+                    <a href="#"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Expense</a>
+
+                    <a href="#"
+                        class="text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium">Report</a>
+
+
+                </div>
+                <div class="border-t border-gray-700 pb-3 pt-4">
+                    <div class="flex items-center px-5">
+                        <div class="flex-shrink-0">
+                            <img class="h-10 w-10 rounded-full"
+                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                alt="">
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-base font-medium leading-none text-white">Tom Cook</div>
+                            <div class="text-sm font-medium leading-none text-gray-400">tom@example.com</div>
+                        </div>
+                        <button type="button"
+                            class="ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                            <span class="sr-only">View notifications</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                            </svg>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </nav>
+
+        <section class="main">
+
+
+            <div class="expenseform 	">
+
+
+
+
+ 
+                    <div class="flex justify-evenly border-none  " style=" ">
+                        <div class=" flex  border-none">
+                            <div class="budget-feedback alert alert-danger text-capitalize">budget feedback
+                            </div>
+                            <form class="budget-form border-none  " id="budget-form">
+                                <h5 class="text-capitalize">please enter your Income</h5>
+                                <div class="form-group"><input type="number" class="form-control budget-input w-60 h-10"
+                                        id="budget-input"></div>
+                                <button type="submit" class="btn text-capitalize budget-submit mt-4 w-28 h-8 rounded-md"
+                                    id="budget-submit">calculate</button>
+                            </form>
+                        </div>
+                        <div class=" flex ">
+                            <div class="expense-feedback alert  alert-danger text-capitalize">expense
+                                feedback
+                            </div>
+                            <form class="expense-form border-none" id="expense-form">
+                                <h5 class="text-capitalize">please enter your expense Title</h5>
+                                <div class="form-group"><input type="text"
+                                        placeholder="Food , Drink, Transport.......ect"
+                                        class="form-control expense-input pl-4 w-60 h-10" id="expense-input">
+                                </div>
+                                <h5 class="text-capitalize">please enter expense amount</h5>
+                                <div class="form-group"><input type="number"
+                                        class="form-control expense-input w-60 h-10" id="amount-input">
+                                </div>
+                                <button type="submit"
+                                    class="btn text-capitalize expense-submit mt-4 w-28 h-8 rounded-md		"
+                                    id="expense-submit">add expense</button>
+                            </form>
+                        </div>
+
+                        <div class=" flex flex-col	  ">
+
+                            <div class=" ">
+                                <div class="row1 my-3 flex  gap-10  ">
+                                    <div class=" text-center mb-2">
+                                        <h6 class="text-uppercase info-title">Income</h6>
+
+                                        <h4 class="text-uppercase mt-2 budget" id="budget">
+                                            <span>$</span><span id="budget-amount">0</span>
+                                        </h4>
+                                    </div>
+                                    <div class=" text-center">
+                                        <h6 class="text-uppercase info-title">expense</h6>
+                                        <span class="expense-icon"><i class="fas fa-credit-card"></i></span>
+                                        <h4 class="text-uppercase mt-2 expense" id="expense">
+                                            <span>$</span><span id="expense-amount">0</span>
+                                        </h4>
+                                    </div>
+                                    <div class="  text-center">
+                                        <h6 class="text-uppercase info-title">balance</h6>
+                                        <span class="balance-icon"><i class="fas fa-dollar-sign"></i></span>
+                                        <h4 class="text-uppercase mt-2 balance" id="balance">
+                                            <span>$</span><span id="balance-amount">0</span>
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="  pl-12 my-3">
+                                    <div class="expense-list" id="expense-list">
+                                        <div class="expense-list__infob flex   gap-14 text-capitalize">
+                                            <h5 class="list-item">expense title</h5>
+                                            <h5 class="list-item">expense value</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="bg-white ">
+                <div
+                    class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4   sm:px-6  lg:max-w-7xl   lg:px-8">
+                    <div class="">
+                        <h2 class="text-3xl font-bold tracking-tight text-green-500 sm:text-4xl">Transactions
+                            Overview</h2>
+
+                        <div class="mb-6">
+                            <h4 class="text-2xl font-bold mt-10 mb-4 ml-2 text-gray-400"> Transaction last month</h4>
+                            <dl class=" grid grid-cols-1 gap-x-6 gap-y-10 gap-12 sm:grid-cols-2 sm:gap-y-16 lg:gap-x-8">
+
+                                <div class="flex justify-around  ">
+                                    <div
+                                        class="h-24  bg-slate-50  rounded-2xl  text-indigo-500 shadow hover:shadow-lg cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300  ">
+                                        <dt class="text-2xl text-blue-500">food & restaurant</dt>
+                                        <dd class="mt-2 text-2xl  font-bold text-gray-900">650</dd>
+                                    </div>
+
+                                    <div
+                                        class="h-24  bg-slate-50 w-32  rounded-2xl  text-indigo-500 shadow hover:shadow-lg cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300">
+                                        <dt class="text-2xl text-blue-500">transport</dt>
+                                        <dd class="mt-2 text-2xl  font-bold text-gray-900">1250</dd>
+                                    </div>
+                                </div>
+                                <div class="flex justify-around">
+                                    <div
+                                        class="h-24  bg-gray-50 rounded-2xl  text-indigo-500 shadow hover:shadow-lg w-32  cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300">
+                                        <dt class="text-2xl text-blue-500">Shopping</dt>
+                                        <dd class="mt-2 text-2xl  font-bold text-gray-900">1400</dd>
+                                    </div>
+
+                                    <div
+                                        class="h-24   bg-gray-50 rounded-2xl  text-indigo-500 shadow hover:shadow-lg cursor-pointer m-4 p-4 bg-white transition ease-in duration-300">
+                                        <dt class="text-2xl text-blue-500">Bills & Payment</dt>
+                                        <dd class="mt-2 text-2xl  font-bold text-gray-900 ">2100</dd>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="bg-white">
+                <div
+                    class="mx-auto grid max-w-2xl grid-cols-1 items-center gap-x-8 gap-y-16 px-4   sm:px-6  lg:max-w-7xl   lg:px-8">
+                    <div class=" ">
+
+
+
+                        <dl
+                            class="mt-2 mb-20 grid grid-cols-1 gap-x-6 gap-y-10 gap-12 sm:grid-cols-2 sm:gap-y-16 lg:gap-x-8">
+                            <div class="flex justify-around">
+                                <div
+                                    class="h-24    bg-gray-50  rounded-2xl  text-indigo-500 shadow hover:shadow-lg cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300    ">
+                                    <dt class="text-2xl text-blue-500">Health Insurancee...</dt>
+                                    <dd class="mt-2 text-2xl  font-bold text-gray-900">650</dd>
+                                </div>
+
+                                <div
+                                    class="h-24   bg-gray-50  rounded-2xl w-32 text-indigo-500 shadow hover:shadow-lg cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300">
+                                    <dt class="text-2xl text-blue-500">Gas</dt>
+                                    <dd class="mt-2 text-2xl  font-bold text-gray-900">1250</dd>
+                                </div>
+                            </div>
+                            <div class="flex justify-around">
+                                <div
+                                    class="h-24 bg-gray-50  rounded-2xl w-32 text-indigo-500 shadow hover:shadow-lg cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300">
+                                    <dt class="text-2xl text-blue-500">Spared</dt>
+                                    <dd class="mt-2 text-2xl  font-bold text-gray-900">1400</dd>
+                                </div>
+
+                                <div
+                                    class="h-24   bg-gray-50  rounded-2xl w-32   shadow hover:shadow-lg cursor-pointer mb-2 p-1 bg-white transition ease-in duration-300">
+                                    <dt class="text-2xl text-blue-500">Drinks</dt>
+                                    <dd class="mt-2 text-2xl  font-bold text-gray-900 ">2100</dd>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+    </div>
+
+
+
+
+    </section>
+
+
+
+
+
+
+</body>
+
+</html>
